@@ -13,16 +13,20 @@ import com.alamkanak.weekview.sample.util.ToolbarUtils;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import kotlin.Unit;
 
 import static android.widget.Toast.LENGTH_SHORT;
+import static java.time.format.FormatStyle.LONG;
+import static java.time.format.FormatStyle.SHORT;
 
 public class LegacyActivity extends AppCompatActivity {
 
     private EventsFetcher eventsFetcher;
-    private WeekViewAdapter weekViewAdapter;
+    WeekViewAdapter weekViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,12 +43,15 @@ public class LegacyActivity extends AppCompatActivity {
         weekView.setAdapter(weekViewAdapter);
     }
 
-    private void onLoadMore(@NotNull Calendar startDate, @NotNull Calendar endDate) {
-        eventsFetcher.fetch(startDate, endDate, weekViewAdapter::submit);
+    private void onLoadMore(@NotNull LocalDate startDate, @NotNull LocalDate endDate) {
+        eventsFetcher.fetch(startDate, endDate, weekViewDisplayables -> {
+            weekViewAdapter.submit(weekViewDisplayables);
+            return Unit.INSTANCE;
+        });
     }
 
     interface OnLoadMoreNotifier {
-        void onLoadMore(Calendar startDate, Calendar endDate);
+        void onLoadMore(LocalDate startDate, LocalDate endDate);
     }
 
     private static class WeekViewAdapter extends WeekView.PagingAdapter<Event> {
@@ -63,9 +70,9 @@ public class LegacyActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onEmptyViewClick(@NotNull Calendar time) {
-            DateFormat sdf = SimpleDateFormat.getDateTimeInstance();
-            String formattedTime = sdf.format(time.getTime());
+        public void onEmptyViewClick(@NotNull LocalDateTime time) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(LONG, SHORT);
+            String formattedTime = formatter.format(time);
             Toast.makeText(getContext(), "Empty view clicked: " + formattedTime, LENGTH_SHORT).show();
         }
 
@@ -75,14 +82,14 @@ public class LegacyActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onEmptyViewLongClick(@NotNull Calendar time) {
-            DateFormat sdf = SimpleDateFormat.getDateTimeInstance();
-            String formattedTime = sdf.format(time.getTime());
+        public void onEmptyViewLongClick(@NotNull LocalDateTime time) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(LONG, SHORT);
+            String formattedTime = formatter.format(time);
             Toast.makeText(getContext(), "Empty view long-clicked: " + formattedTime, LENGTH_SHORT).show();
         }
 
         @Override
-        public void onLoadMore(@NotNull Calendar startDate, @NotNull Calendar endDate) {
+        public void onLoadMore(@NotNull LocalDate startDate, @NotNull LocalDate endDate) {
             notifier.onLoadMore(startDate, endDate);
         }
     }

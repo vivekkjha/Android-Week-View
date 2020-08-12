@@ -8,8 +8,9 @@ import android.text.SpannableStringBuilder
 import android.text.StaticLayout
 import android.util.SparseArray
 import androidx.collection.ArrayMap
-import java.util.Calendar
-import kotlin.math.max
+import java.time.LocalDate
+import java.time.temporal.WeekFields
+import java.util.Locale
 import kotlin.math.roundToInt
 
 internal class HeaderRenderer(
@@ -31,7 +32,7 @@ internal class HeaderRenderer(
         eventChipsCache = eventChipsCache
     )
 
-    private val dateLabelDrawer = DayLabelsDrawer(
+    private val dateLabelDrawer = DateLabelsDrawer(
         viewState = viewState,
         dateLabelLayouts = dateLabelLayouts
     )
@@ -73,13 +74,12 @@ private class HeaderRowUpdater(
 ) : Updater {
 
     override fun update() {
-        val missingDates = viewState.dateRange.filterNot { labelLayouts.contains(it.toEpochDays()) }
+        val missingDates = viewState.dateRange.filterNot { labelLayouts.contains(it.cacheKey) }
         for (date in missingDates) {
-            val key = date.toEpochDays()
-            labelLayouts.put(key, calculateStaticLayoutForDate(date))
+            labelLayouts.put(date.cacheKey, calculateStaticLayoutForDate(date))
         }
 
-        val dateLabels = viewState.dateRange.map { labelLayouts[it.toEpochDays()] }
+        val dateLabels = viewState.dateRange.map { labelLayouts[it.cacheKey] }
         updateHeaderHeight(dateLabels)
     }
 
@@ -93,7 +93,7 @@ private class HeaderRowUpdater(
         viewState.refreshHeaderHeight()
     }
 
-    private fun calculateStaticLayoutForDate(date: Calendar): StaticLayout {
+    private fun calculateStaticLayoutForDate(date: LocalDate): StaticLayout {
         val dayLabel = viewState.dateFormatter(date)
         return dayLabel.toTextLayout(
             textPaint = if (date.isToday) viewState.todayHeaderTextPaint else viewState.headerTextPaint,
@@ -104,9 +104,12 @@ private class HeaderRowUpdater(
     private operator fun <E> SparseArray<E>.plusAssign(elements: Map<Int, E>) {
         elements.entries.forEach { put(it.key, it.value) }
     }
+
+    private val LocalDate.cacheKey: Int
+        get() = toEpochDay().toInt()
 }
 
-private class DayLabelsDrawer(
+private class DateLabelsDrawer(
     private val viewState: ViewState,
     private val dateLabelLayouts: SparseArray<StaticLayout>
 ) : Drawer {
@@ -124,9 +127,8 @@ private class DayLabelsDrawer(
         }
     }
 
-    private fun Canvas.drawLabel(day: Calendar, startPixel: Float) {
-        val key = day.toEpochDays()
-        val textLayout = dateLabelLayouts[key]
+    private fun Canvas.drawLabel(day: LocalDate, startPixel: Float) {
+        val textLayout = dateLabelLayouts[day.toEpochDay().toInt()]
 
         withTranslation(
             x = startPixel + viewState.widthPerDay / 2,
@@ -325,7 +327,8 @@ private class HeaderRowDrawer(
     }
 
     private fun Canvas.drawWeekNumber(state: ViewState) {
-        val weekNumber = state.dateRange.first().weekOfYear.toString()
+        val weekOfYear = WeekFields.of(Locale.getDefault()).weekOfYear()
+        val weekNumber = state.dateRange.first().get(weekOfYear).toString()
 
         val bounds = state.weekNumberBounds
         val textPaint = state.weekNumberTextPaint

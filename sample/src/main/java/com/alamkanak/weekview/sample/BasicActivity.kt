@@ -10,17 +10,17 @@ import com.alamkanak.weekview.sample.data.model.Event
 import com.alamkanak.weekview.sample.util.observe
 import com.alamkanak.weekview.sample.util.setupWithWeekView
 import com.alamkanak.weekview.sample.util.showToast
-import com.alamkanak.weekview.sample.util.toCalendar
-import com.alamkanak.weekview.threetenabp.setDateFormatter
-import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle.LONG
+import java.time.format.FormatStyle.SHORT
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import kotlinx.android.synthetic.main.activity_basic.weekView
 import kotlinx.android.synthetic.main.view_toolbar.toolbar
-import org.threeten.bp.Instant
-import org.threeten.bp.LocalDate
-import org.threeten.bp.ZoneId
-import org.threeten.bp.format.DateTimeFormatter
 
 private class ViewModel(
     private val database: EventsDatabase
@@ -67,29 +67,32 @@ private class BasicActivityWeekViewAdapter(
     private val loadMoreHandler: (startDate: LocalDate, endDate: LocalDate) -> Unit
 ) : WeekView.PagingAdapter<Event>() {
 
-    private val formatter = SimpleDateFormat.getDateTimeInstance()
+    private val formatter = DateTimeFormatter.ofLocalizedDateTime(LONG, SHORT)
 
     override fun onEventClick(data: Event) {
         context.showToast("Removed ${data.title}")
     }
 
-    override fun onEmptyViewClick(time: Calendar) {
-        context.showToast("Empty view clicked at ${formatter.format(time.time)}")
+    override fun onEmptyViewClick(time: LocalDateTime) {
+        context.showToast("Empty view clicked at ${formatter.format(time)}")
     }
 
     override fun onEventLongClick(data: Event) {
         context.showToast("Long-clicked ${data.title}")
     }
 
-    override fun onEmptyViewLongClick(time: Calendar) {
-        context.showToast("Empty view long-clicked at ${formatter.format(time.time)}")
+    override fun onEmptyViewLongClick(time: LocalDateTime) {
+        context.showToast("Empty view long-clicked at ${formatter.format(time)}")
     }
 
-    override fun onLoadMore(startDate: Calendar, endDate: Calendar) {
-        loadMoreHandler(startDate.toLocalDate(), endDate.toLocalDate())
+    override fun onLoadMore(startDate: LocalDate, endDate: LocalDate) {
+        loadMoreHandler(startDate, endDate)
     }
 }
 
-private fun Calendar.toLocalDate(): LocalDate {
-    return Instant.ofEpochMilli(timeInMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+internal fun LocalDate.toCalendar(): Calendar {
+    val instant = atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()
+    val calendar = Calendar.getInstance()
+    calendar.time = Date.from(instant)
+    return calendar
 }

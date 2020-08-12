@@ -10,8 +10,10 @@ import com.alamkanak.weekview.sample.data.EventsApi
 import com.alamkanak.weekview.sample.data.model.ApiEvent
 import com.alamkanak.weekview.sample.util.setupWithWeekView
 import com.alamkanak.weekview.sample.util.showToast
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle.LONG
+import java.time.format.FormatStyle.SHORT
 import kotlinx.android.synthetic.main.activity_basic.blockingProgressIndicator
 import kotlinx.android.synthetic.main.activity_basic.weekView
 import kotlinx.android.synthetic.main.view_toolbar.toolbar
@@ -73,22 +75,22 @@ private class AsyncActivityWeekViewAdapter(
     private val eventClickHandler: (ApiEvent) -> Unit
 ) : WeekView.SimpleAdapter<ApiEvent>() {
 
-    private val formatter = SimpleDateFormat.getDateTimeInstance()
+    private val formatter = DateTimeFormatter.ofLocalizedDateTime(LONG, SHORT)
 
     override fun onEventClick(data: ApiEvent) {
         eventClickHandler(data)
         context.showToast("Removed ${data.title}")
     }
 
-    override fun onEmptyViewClick(time: Calendar) {
-        context.showToast("Empty view clicked at ${formatter.format(time.time)}")
+    override fun onEmptyViewClick(time: LocalDateTime) {
+        context.showToast("Empty view clicked at ${formatter.format(time)}")
     }
 
     override fun onEventLongClick(data: ApiEvent) {
         context.showToast("Long-clicked ${data.title}")
     }
 
-    override fun onEmptyViewLongClick(time: Calendar) {
-        context.showToast("Empty view long-clicked at ${formatter.format(time.time)}")
+    override fun onEmptyViewLongClick(time: LocalDateTime) {
+        context.showToast("Empty view long-clicked at ${formatter.format(time)}")
     }
 }

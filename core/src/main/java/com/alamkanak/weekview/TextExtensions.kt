@@ -21,7 +21,7 @@ internal fun SpannableStringBuilder.setSpan(
 private val emojiCompat: EmojiCompat?
     get() = try { EmojiCompat.get() } catch (e: IllegalStateException) { null }
 
-fun CharSequence.emojify(): CharSequence = emojiCompat?.process(this) ?: this
+internal fun CharSequence.emojify(): CharSequence = emojiCompat?.process(this) ?: this
 
 internal fun CharSequence.toTextLayout(
     textPaint: TextPaint,

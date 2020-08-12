@@ -8,13 +8,13 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
-import java.util.Calendar
+import java.time.LocalDateTime
 
 data class WeekViewEvent<T> internal constructor(
     internal val id: Long = 0L,
     internal val titleResource: TextResource,
-    internal val startTime: Calendar = now(),
-    internal val endTime: Calendar = now(),
+    internal val startTime: LocalDateTime = LocalDateTime.now(),
+    internal val endTime: LocalDateTime = LocalDateTime.now(),
     internal val locationResource: TextResource? = null,
     internal val isAllDay: Boolean = false,
     internal val style: Style = Style(),
@@ -142,8 +142,8 @@ data class WeekViewEvent<T> internal constructor(
         private var id: Long? = null
         private var title: TextResource? = null
         private var location: TextResource? = null
-        private var startTime: Calendar? = null
-        private var endTime: Calendar? = null
+        private var startTime: LocalDateTime? = null
+        private var endTime: LocalDateTime? = null
         private var style: Style? = null
         private var isAllDay: Boolean = false
 
@@ -166,13 +166,13 @@ data class WeekViewEvent<T> internal constructor(
         }
 
         @PublicApi
-        fun setStartTime(startTime: Calendar): Builder<T> {
+        fun setStartTime(startTime: LocalDateTime): Builder<T> {
             this.startTime = startTime
             return this
         }
 
         @PublicApi
-        fun setEndTime(endTime: Calendar): Builder<T> {
+        fun setEndTime(endTime: LocalDateTime): Builder<T> {
             this.endTime = endTime
             return this
         }

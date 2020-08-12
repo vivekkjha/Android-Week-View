@@ -1,7 +1,7 @@
 package com.alamkanak.weekview
 
 import androidx.collection.ArrayMap
-import java.util.Calendar
+import java.time.LocalDate
 
 /**
  * An abstract class that provides functionality to cache [WeekViewEvent]s.
@@ -15,11 +15,11 @@ internal abstract class EventsCache<T> {
     operator fun get(id: Long): ResolvedWeekViewEvent<T>? = allEvents.firstOrNull { it.id == id }
 
     operator fun get(
-        dateRange: List<Calendar>
+        dateRange: List<LocalDate>
     ): List<ResolvedWeekViewEvent<T>> {
         val startDate = checkNotNull(dateRange.min())
         val endDate = checkNotNull(dateRange.max())
-        return allEvents.filter { it.endTime >= startDate || it.startTime <= endDate }
+        return allEvents.filter { it.endTime.toLocalDate() >= startDate || it.startTime.toLocalDate() <= endDate }
     }
 
     operator fun get(
@@ -27,7 +27,7 @@ internal abstract class EventsCache<T> {
     ): List<ResolvedWeekViewEvent<T>> {
         val startTime = fetchRange.previous.startDate
         val endTime = fetchRange.next.endDate
-        return allEvents.filter { it.endTime >= startTime && it.startTime <= endTime }
+        return allEvents.filter { it.endTime.toLocalDate() >= startTime && it.startTime.toLocalDate() <= endTime }
     }
 }
 
@@ -63,7 +63,7 @@ internal class PagedEventsCache<T> : EventsCache<T>() {
     private val eventsByPeriod: ArrayMap<Period, List<ResolvedWeekViewEvent<T>>> = ArrayMap()
 
     override fun update(events: List<ResolvedWeekViewEvent<T>>) {
-        val groupedEvents = events.groupBy { Period.fromDate(it.startTime) }
+        val groupedEvents = events.groupBy { Period.fromDate(it.startTime.toLocalDate()) }
         for ((period, periodEvents) in groupedEvents) {
             eventsByPeriod[period] = periodEvents
         }

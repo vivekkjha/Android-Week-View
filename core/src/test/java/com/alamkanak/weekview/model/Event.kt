@@ -2,11 +2,11 @@ package com.alamkanak.weekview.model
 
 import com.alamkanak.weekview.WeekViewDisplayable
 import com.alamkanak.weekview.WeekViewEvent
-import java.util.Calendar
+import java.time.LocalDateTime
 
 data class Event(
-    val startTime: Calendar,
-    val endTime: Calendar
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime
 ) : WeekViewDisplayable<Event> {
 
     override fun toWeekViewEvent(): WeekViewEvent<Event> {

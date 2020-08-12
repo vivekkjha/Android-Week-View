@@ -1,7 +1,6 @@
 package com.alamkanak.weekview
 
 import android.content.Context
-import android.content.res.TypedArray
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PointF
@@ -10,12 +9,17 @@ import android.graphics.Typeface
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.TypedValue
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
+import java.time.temporal.WeekFields
+import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
-typealias DateFormatter = (Calendar) -> String
+typealias DateFormatter = (LocalDate) -> String
 typealias TimeFormatter = (Int) -> String
 
 internal data class ViewState(
@@ -24,8 +28,8 @@ internal data class ViewState(
     var viewHeight: Int = 0,
 
     // Calendar state
-    var firstVisibleDate: Calendar = today(),
-    var scrollToDate: Calendar? = null,
+    var firstVisibleDate: LocalDate = LocalDate.now(),
+    var scrollToDate: LocalDate? = null,
     var scrollToHour: Int? = null,
 
     private var isFirstDraw: Boolean = true,
@@ -34,11 +38,10 @@ internal data class ViewState(
     // Drawing context
     private var startPixel: Float = 0f,
     val startPixels: MutableList<Float> = mutableListOf(),
-    val dateRange: MutableList<Calendar> = mutableListOf(),
-    val dateRangeWithStartPixels: MutableList<Pair<Calendar, Float>> = mutableListOf(),
+    val dateRange: MutableList<LocalDate> = mutableListOf(),
+    val dateRangeWithStartPixels: MutableList<Pair<LocalDate, Float>> = mutableListOf(),
 
     // Calendar configuration
-    var firstDayOfWeek: Int = now().firstDayOfWeek,
     var numberOfVisibleDays: Int = 0,
     var restoreNumberOfVisibleDays: Boolean = true,
     var showFirstDayOfWeekFirst: Boolean = false,
@@ -165,7 +168,7 @@ internal data class ViewState(
             textAlign = Paint.Align.RIGHT
             textSize = timeColumnTextSize.toFloat()
             color = timeColumnTextColor
-            typeface = typeface
+            typeface = this@ViewState.typeface
         }
 
     var timeTextHeight: Float = 0f
@@ -178,7 +181,7 @@ internal data class ViewState(
         get() = _headerTextPaint.apply {
             color = headerRowTextColor
             textSize = headerRowTextSize.toFloat()
-            typeface = Typeface.create(typeface, Typeface.BOLD)
+            typeface = Typeface.create(this@ViewState.typeface, Typeface.BOLD)
         }
 
     private val _headerRowBottomLinePaint: Paint = Paint()
@@ -200,7 +203,7 @@ internal data class ViewState(
     val todayHeaderTextPaint: TextPaint
         get() = _todayHeaderTextPaint.apply {
             textSize = headerRowTextSize.toFloat()
-            typeface = Typeface.create(typeface, Typeface.BOLD)
+            typeface = Typeface.create(this@ViewState.typeface, Typeface.BOLD)
             color = todayHeaderTextColor
         }
 
@@ -313,7 +316,7 @@ internal data class ViewState(
         get() = _eventTextPaint.apply {
             color = eventTextColor
             textSize = eventTextSize.toFloat()
-            typeface = typeface
+            typeface = this@ViewState.typeface
         }
 
     private val _allDayEventTextPaint: TextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG).apply {
@@ -324,7 +327,7 @@ internal data class ViewState(
         get() = _allDayEventTextPaint.apply {
             color = eventTextColor
             textSize = allDayEventTextSize.toFloat()
-            typeface = typeface
+            typeface = this@ViewState.typeface
         }
 
     private val _timeColumnBackgroundPaint: Paint = Paint()
@@ -336,22 +339,22 @@ internal data class ViewState(
 
     var newHourHeight: Float = 0f
 
-    var minDate: Calendar? = null
-    var maxDate: Calendar? = null
+    var minDate: LocalDate? = null
+    var maxDate: LocalDate? = null
 
     var dateFormatter: DateFormatter = { date ->
-        defaultDateFormatter(numberOfDays = numberOfVisibleDays).format(date.time)
+        defaultDateFormatter(numberOfDays = numberOfVisibleDays).format(date)
     }
 
     var timeFormatter: TimeFormatter = { hour ->
-        val date = now().withTime(hour = hour, minutes = 0)
-        defaultTimeFormatter().format(date.time)
+        val date = LocalDate.now().atTime(hour, 0)
+        defaultTimeFormatter().format(date)
     }
 
     val minX: Float
         get() {
             return maxDate?.let {
-                val date = it - Days(numberOfVisibleDays - 1)
+                val date = it.minusDays(numberOfVisibleDays - 1)
                 getXOriginForDate(date)
             } ?: Float.NEGATIVE_INFINITY
         }
@@ -422,18 +425,20 @@ internal data class ViewState(
         widthPerDay = availableWidth / numberOfVisibleDays
     }
 
-    fun getXOriginForDate(date: Calendar): Float {
+    fun getXOriginForDate(date: LocalDate): Float {
         return date.daysFromToday * totalDayWidth * -1f
     }
 
     private fun moveCurrentOriginIfFirstDraw() {
-        // If the week view is being drawn for the first time, then consider the first day of the
-        // week.
-        val today = today()
+        // If the week view is being drawn for the first time,
+        // then consider the first day of the week.
+        val today = LocalDate.now()
         val isWeekView = numberOfVisibleDays >= 7
-        val currentDayIsNotToday = today.dayOfWeek != firstDayOfWeek
 
-        if (isWeekView && currentDayIsNotToday && showFirstDayOfWeekFirst) {
+        val firstDayOfWeek = WeekFields.of(Locale.getDefault()).firstDayOfWeek
+        val needsToScroll = firstVisibleDate.dayOfWeek != firstDayOfWeek
+
+        if (isWeekView && showFirstDayOfWeekFirst && needsToScroll) {
             val difference = today.computeDifferenceWithFirstDayOfWeek()
             currentOrigin.x += (widthPerDay + columnGap) * difference
         }
@@ -443,25 +448,25 @@ internal data class ViewState(
         }
 
         // Overwrites the origin when today is out of date range
-        currentOrigin.x = min(currentOrigin.x, maxX)
-        currentOrigin.x = max(currentOrigin.x, minX)
+        currentOrigin.x = currentOrigin.x.limit(minValue = minX, maxValue = maxX)
+//        currentOrigin.x = min(currentOrigin.x, maxX)
+//        currentOrigin.x = max(currentOrigin.x, minX)
     }
 
     private fun scrollToCurrentTime() {
-        val desired = now()
-        if (desired.hour > minHour) {
+        val desiredTime = LocalDateTime.now()
+        val adjustedTime = if (desiredTime.hour > minHour) {
             // Add some padding above the current time (and thus: the now line)
-            desired -= Hours(1)
+            desiredTime.minusHours(1)
         } else {
-            desired -= Minutes(desired.minute)
+            // Scroll to closest hour
+            desiredTime.minusMinutes(desiredTime.minute)
         }
 
-        val minTime = now().withTime(hour = minHour, minutes = 0)
-        val maxTime = now().withTime(hour = maxHour, minutes = 0)
-        desired.limitBy(minTime, maxTime)
+        val finalTime = adjustedTime.limitedBy(minHour = minHour, maxHour = maxHour)
+        val fraction = finalTime.minute / 60f
 
-        val fraction = desired.minute / 60f
-        val verticalOffset = hourHeight * (desired.hour + fraction)
+        val verticalOffset = hourHeight * (finalTime.hour + fraction)
         val desiredOffset = totalDayHeight - viewHeight
 
         currentOrigin.y = min(desiredOffset, verticalOffset) * -1
@@ -471,31 +476,26 @@ internal data class ViewState(
      * Returns the provided date, if it is within [minDate] and [maxDate]. Otherwise, it returns
      * [minDate] or [maxDate].
      */
-    fun getDateWithinDateRange(date: Calendar): Calendar {
+    fun getDateWithinDateRange(date: LocalDate): LocalDate {
         val minDate = minDate ?: date
         val maxDate = maxDate ?: date
 
         return if (date.isBefore(minDate)) {
             minDate
         } else if (date.isAfter(maxDate)) {
-            maxDate + Days(1 - numberOfVisibleDays)
+            maxDate.plusDays(1 - numberOfVisibleDays)
         } else if (numberOfVisibleDays >= 7 && showFirstDayOfWeekFirst) {
             val diff = date.computeDifferenceWithFirstDayOfWeek()
-            date - Days(diff)
+            date.minusDays(diff)
         } else {
             date
         }
     }
 
-    private fun Calendar.computeDifferenceWithFirstDayOfWeek(): Int {
-        val firstDayOfWeek = firstDayOfWeek
-        return if (firstDayOfWeek == Calendar.MONDAY && dayOfWeek == Calendar.SUNDAY) {
-            // Special case, because Calendar.MONDAY has constant value 2 and Calendar.SUNDAY has
-            // constant value 1. The correct result to return is 6 days, not -1 days.
-            6
-        } else {
-            dayOfWeek - firstDayOfWeek
-        }
+    private fun LocalDate.computeDifferenceWithFirstDayOfWeek(): Int {
+        val firstDayOfWeek = WeekFields.of(Locale.getDefault()).firstDayOfWeek
+        val startOfWeek = LocalDate.now().with(TemporalAdjusters.previousOrSame(firstDayOfWeek))
+        return ChronoUnit.DAYS.between(startOfWeek, this).toInt()
     }
 
     private fun refreshAfterZooming() {
@@ -652,8 +652,6 @@ internal data class ViewState(
             val a = context.theme.obtainStyledAttributes(attrs, R.styleable.WeekView, 0, 0)
             return ViewState(
                 // Calendar configuration
-                firstDayOfWeek = a.getInt(R.styleable.WeekView_firstDayOfWeek)
-                    ?: now().firstDayOfWeek,
                 numberOfVisibleDays = a.getInt(R.styleable.WeekView_numberOfVisibleDays, 3),
                 restoreNumberOfVisibleDays = a.getBoolean(R.styleable.WeekView_restoreNumberOfVisibleDays, true),
                 showFirstDayOfWeekFirst = a.getBoolean(R.styleable.WeekView_showFirstDayOfWeekFirst, false),
@@ -799,10 +797,6 @@ internal data class ViewState(
         private const val SERIF = 2
         private const val MONOSPACE = 3
     }
-}
-
-private fun TypedArray.getInt(index: Int): Int? {
-    return if (hasValue(index)) getInteger(index, 0) else null
 }
 
 private object Defaults {

@@ -10,7 +10,7 @@ import com.alamkanak.weekview.sample.data.model.Event
 import com.alamkanak.weekview.sample.util.lazyView
 import com.alamkanak.weekview.sample.util.setupWithWeekView
 import com.google.android.material.appbar.MaterialToolbar
-import java.util.Calendar
+import java.time.LocalDate
 import kotlinx.android.synthetic.main.fragment_week.weekView
 
 class WithFragmentActivity : AppCompatActivity(R.layout.activity_with_fragment) {
@@ -35,29 +35,18 @@ class WeekFragment : Fragment(R.layout.fragment_week) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         toolbar.setupWithWeekView(weekView)
 
-        val start = getStartDate()
-        val end = getEndDate()
+        val start = LocalDate.now().withDayOfMonth(1)
+        val end = start.withDayOfMonth(start.lengthOfMonth())
 
         val adapter = WeekView.SimpleAdapter<Event>()
         weekView.adapter = adapter
 
-        val events = database.getEventsInRange(start, end)
+        val events = database.getEventsInRange(start.toCalendar(), end.toCalendar())
         adapter.submit(events)
 
         // Limit WeekView to the current month
         weekView.minDate = start
         weekView.maxDate = end
-    }
-
-    private fun getStartDate(): Calendar = Calendar.getInstance().apply {
-        set(Calendar.DAY_OF_MONTH, 1)
-        set(Calendar.HOUR_OF_DAY, 0)
-    }
-
-    private fun getEndDate(): Calendar = Calendar.getInstance().apply {
-        val daysInMonth = getActualMaximum(Calendar.DAY_OF_MONTH)
-        set(Calendar.DAY_OF_MONTH, daysInMonth)
-        set(Calendar.HOUR_OF_DAY, 23)
     }
 
     companion object {

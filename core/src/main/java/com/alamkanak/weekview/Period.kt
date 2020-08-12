@@ -1,6 +1,7 @@
 package com.alamkanak.weekview
 
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.Month
 
 internal data class FetchRange(
     val previous: Period,
@@ -11,7 +12,7 @@ internal data class FetchRange(
     val periods: List<Period> = listOf(previous, current, next)
 
     internal companion object {
-        fun create(firstVisibleDay: Calendar): FetchRange {
+        fun create(firstVisibleDay: LocalDate): FetchRange {
             val current = Period.fromDate(firstVisibleDay)
             return FetchRange(current.previous, current, current.next)
         }
@@ -19,26 +20,26 @@ internal data class FetchRange(
 }
 
 internal data class Period(
-    val month: Int,
+    val month: Month,
     val year: Int
 ) : Comparable<Period> {
 
     val previous: Period
         get() {
-            val year = if (month == Calendar.JANUARY) year - 1 else year
-            val month = if (month == Calendar.JANUARY) Calendar.DECEMBER else month - 1
+            val year = if (month == Month.JANUARY) year - 1 else year
+            val month = if (month == Month.JANUARY) Month.DECEMBER else month - 1
             return Period(month, year)
         }
 
     val next: Period
         get() {
-            val year = if (month == Calendar.DECEMBER) year + 1 else year
-            val month = if (month == Calendar.DECEMBER) Calendar.JANUARY else month + 1
+            val year = if (month == Month.DECEMBER) year + 1 else year
+            val month = if (month == Month.DECEMBER) Month.JANUARY else month + 1
             return Period(month, year)
         }
 
-    val startDate: Calendar = newDate(year, month, dayOfMonth = 1)
-    val endDate: Calendar = startDate.withDayOfMonth(startDate.lengthOfMonth).atEndOfDay
+    val startDate: LocalDate = LocalDate.of(year, month, 1)
+    val endDate: LocalDate = startDate.withDayOfMonth(startDate.lengthOfMonth())
 
     override fun compareTo(other: Period): Int {
         return when {
@@ -49,6 +50,6 @@ internal data class Period(
     }
 
     internal companion object {
-        fun fromDate(date: Calendar): Period = Period(month = date.month, year = date.year)
+        fun fromDate(date: LocalDate): Period = Period(month = date.month, year = date.year)
     }
 }

@@ -10,7 +10,7 @@ import com.alamkanak.weekview.Direction.Left
 import com.alamkanak.weekview.Direction.None
 import com.alamkanak.weekview.Direction.Right
 import com.alamkanak.weekview.Direction.Vertical
-import java.util.Calendar
+import java.time.LocalDate
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -129,12 +129,12 @@ internal class WeekViewGestureHandler(
         return true
     }
 
-    private lateinit var preFlingFirstVisibleDate: Calendar
+    private lateinit var preFlingFirstVisibleDate: LocalDate
 
     private fun onFlingHorizontal() {
         val destinationDate = when (currentFlingDirection) {
-            Left -> preFlingFirstVisibleDate + Days(viewState.numberOfVisibleDays)
-            Right -> preFlingFirstVisibleDate - Days(viewState.numberOfVisibleDays)
+            Left -> preFlingFirstVisibleDate.plusDays(viewState.numberOfVisibleDays)
+            Right -> preFlingFirstVisibleDate.minusDays(viewState.numberOfVisibleDays)
             else -> throw IllegalStateException()
         }
 
@@ -233,7 +233,7 @@ internal class WeekViewGestureHandler(
             goToNearestOrigin()
             currentScrollDirection = None
         } else if (event.action == ACTION_DOWN) {
-            preFlingFirstVisibleDate = viewState.firstVisibleDate.copy()
+            preFlingFirstVisibleDate = viewState.firstVisibleDate
         }
 
         return handled

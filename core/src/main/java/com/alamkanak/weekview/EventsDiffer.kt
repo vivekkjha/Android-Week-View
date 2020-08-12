@@ -50,17 +50,6 @@ internal class EventsDiffer<T>(
         viewState: ViewState
     ) {
         val events = items.map { it.toResolvedWeekViewEvent(context) }
-        val startDate = events.map { it.startTime.atStartOfDay }.min()
-        val endDate = events.map { it.endTime.atEndOfDay }.max()
-
-        if (startDate == null || endDate == null) {
-            // If these are null, this would indicate that the submitted list of events is empty.
-            // The new items are empty, but it's possible that WeekView is currently displaying
-            // events.
-            eventsCache.clear()
-            return
-        }
-
         eventsCache.update(events)
 
         if (eventsCache is SimpleEventsCache) {

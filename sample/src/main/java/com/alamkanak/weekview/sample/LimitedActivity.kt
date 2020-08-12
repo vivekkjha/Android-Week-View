@@ -6,9 +6,11 @@ import com.alamkanak.weekview.WeekView
 import com.alamkanak.weekview.sample.data.model.Event
 import com.alamkanak.weekview.sample.util.setupWithWeekView
 import com.alamkanak.weekview.sample.util.showToast
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Calendar.DAY_OF_MONTH
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle.LONG
+import java.time.format.FormatStyle.SHORT
 import kotlinx.android.synthetic.main.activity_limited.weekView
 import kotlinx.android.synthetic.main.view_toolbar.toolbar
 
@@ -31,45 +33,38 @@ class LimitedActivity : AppCompatActivity() {
     }
 
     private fun setupDateRange() {
-        val now = Calendar.getInstance()
-
-        val min = now.clone() as Calendar
-        min.set(DAY_OF_MONTH, 1)
-        weekView.minDate = min
-
-        val max = now.clone() as Calendar
-        max.set(DAY_OF_MONTH, max.getActualMaximum(DAY_OF_MONTH))
-        weekView.maxDate = max
+        weekView.minDate = LocalDate.now().withDayOfMonth(1)
+        weekView.maxDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
     }
 
-    private fun onLoadMore(startDate: Calendar, endDate: Calendar) {
+    private fun onLoadMore(startDate: LocalDate, endDate: LocalDate) {
         eventsFetcher.fetch(startDate, endDate, adapter::submit)
     }
 }
 
 private class LimitedActivityWeekViewAdapter(
-    private val loadMoreHandler: (startDate: Calendar, endDate: Calendar) -> Unit
+    private val loadMoreHandler: (startDate: LocalDate, endDate: LocalDate) -> Unit
 ) : WeekView.PagingAdapter<Event>() {
 
-    private val formatter = SimpleDateFormat.getDateTimeInstance()
+    private val formatter = DateTimeFormatter.ofLocalizedDateTime(LONG, SHORT)
 
     override fun onEventClick(data: Event) {
         context.showToast("Removed ${data.title}")
     }
 
-    override fun onEmptyViewClick(time: Calendar) {
-        context.showToast("Empty view clicked at ${formatter.format(time.time)}")
+    override fun onEmptyViewClick(time: LocalDateTime) {
+        context.showToast("Empty view clicked at ${formatter.format(time)}")
     }
 
     override fun onEventLongClick(data: Event) {
         context.showToast("Long-clicked ${data.title}")
     }
 
-    override fun onEmptyViewLongClick(time: Calendar) {
-        context.showToast("Empty view long-clicked at ${formatter.format(time.time)}")
+    override fun onEmptyViewLongClick(time: LocalDateTime) {
+        context.showToast("Empty view long-clicked at ${formatter.format(time)}")
     }
 
-    override fun onLoadMore(startDate: Calendar, endDate: Calendar) {
+    override fun onLoadMore(startDate: LocalDate, endDate: LocalDate) {
         loadMoreHandler(startDate, endDate)
     }
 }

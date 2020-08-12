@@ -2,7 +2,9 @@ package com.alamkanak.weekview
 
 import com.alamkanak.weekview.model.Event
 import com.alamkanak.weekview.util.createResolvedWeekViewEvent
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.`when` as whenever
 import org.mockito.Mockito.mock
@@ -20,8 +22,8 @@ class WeekViewEventSplitterTest {
 
     @Test
     fun `single-day event is not split`() {
-        val startTime = today().withHour(11)
-        val endTime = startTime + Hours(2)
+        val startTime = LocalDate.now().atTime(11, 0)
+        val endTime = startTime.plusHours(2)
         val event = createResolvedWeekViewEvent(startTime, endTime)
 
         val results = event.split(viewState)
@@ -32,41 +34,43 @@ class WeekViewEventSplitterTest {
 
     @Test
     fun `two-day event is split correctly`() {
-        val startTime = today().withHour(11)
-        val endTime = (startTime + Days(1)).withHour(2)
+        val startTime = LocalDate.now().atTime(11, 0)
+        val endTime = (startTime.plusDays(1)).withHour(2)
 
         val event = createResolvedWeekViewEvent(startTime, endTime)
         val results = event.split(viewState)
 
         val expected = listOf(
-            Event(startTime, startTime.atEndOfDay),
-            Event(endTime.atStartOfDay, endTime)
+            Event(startTime, startTime.withTimeAtEndOfPeriod(24)),
+            Event(endTime.withTimeAtStartOfPeriod(0), endTime)
         )
 
-        val expectedTimes = expected.map { it.startTime.timeInMillis to it.endTime.timeInMillis }
-        val resultTimes = results.map { it.startTime.timeInMillis to it.endTime.timeInMillis }
-
-        assertEquals(expectedTimes, resultTimes)
+        assertEqualEvents(expected, results)
     }
 
     @Test
     fun `three-day event is split correctly`() {
-        val startTime = today().withHour(11)
-        val endTime = (startTime + Days(2)).withHour(2)
+        val startTime = LocalDate.now().atTime(11, 0)
+        val endTime = (startTime.plusDays(2)).withHour(2)
 
         val event = createResolvedWeekViewEvent(startTime, endTime)
         val results = event.split(viewState)
 
-        val intermediateDate = startTime + Days(1)
+        val intermediateDate = startTime.plusDays(1)
         val expected = listOf(
-            Event(startTime, startTime.atEndOfDay),
-            Event(intermediateDate.atStartOfDay, intermediateDate.atEndOfDay),
-            Event(endTime.atStartOfDay, endTime)
+            Event(startTime, startTime.withTimeAtEndOfPeriod(hour = 24)),
+            Event(intermediateDate.withTimeAtStartOfPeriod(0), intermediateDate.withTimeAtEndOfPeriod(24)),
+            Event(endTime.withTimeAtStartOfPeriod(0), endTime)
         )
 
-        val expectedTimes = expected.map { it.startTime.timeInMillis to it.endTime.timeInMillis }
-        val resultTimes = results.map { it.startTime.timeInMillis to it.endTime.timeInMillis }
+        assertEqualEvents(expected, results)
+    }
 
-        assertEquals(expectedTimes, resultTimes)
+    private fun assertEqualEvents(expected: List<Event>, received: List<ResolvedWeekViewEvent<*>>) {
+        val zipped = expected.zip(received)
+        val isEqual = zipped.all { (expected, result) ->
+            expected.startTime.isEqual(result.startTime) && expected.endTime.isEqual(result.endTime)
+        }
+        assertTrue(isEqual)
     }
 }

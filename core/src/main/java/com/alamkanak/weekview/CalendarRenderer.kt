@@ -3,7 +3,8 @@ package com.alamkanak.weekview
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -54,12 +55,12 @@ private class SingleEventsUpdater(
                     viewState.isSingleDay -> startPixel + viewState.eventMarginHorizontal.toFloat()
                     else -> startPixel
                 }
-                calculateRectsForEventsOnDate(date, modifiedStartPixel)
+                calculateBoundsForEventsOnDate(date, modifiedStartPixel)
             }
     }
 
-    private fun calculateRectsForEventsOnDate(
-        date: Calendar,
+    private fun calculateBoundsForEventsOnDate(
+        date: LocalDate,
         startPixel: Float
     ) {
         chipsCache.normalEventChipsByDate(date)
@@ -96,12 +97,12 @@ private class DayBackgroundDrawer(
     /**
      * Draws a day's background color in the corresponding bounds.
      *
-     * @param day The [Calendar] indicating the date
+     * @param day The [LocalDate] indicating the date
      * @param startPixel The x-coordinate on which to start drawing the background
      * @param canvas The [Canvas] on which to draw the background
      */
     private fun drawDayBackground(
-        day: Calendar,
+        day: LocalDate,
         startPixel: Float,
         canvas: Canvas
     ) {
@@ -143,7 +144,7 @@ private class DayBackgroundDrawer(
         height: Float,
         canvas: Canvas
     ) {
-        val now = now()
+        val now = LocalDateTime.now()
         val hour = now.hour - viewState.minHour
         val hourFraction = now.minute / 60f
 
@@ -244,7 +245,7 @@ private class SingleEventsDrawer(
     }
 
     private fun drawEventsForDate(
-        date: Calendar,
+        date: LocalDate,
         canvas: Canvas
     ) {
         chipsCache
@@ -274,7 +275,7 @@ private class NowLineDrawer(
 
     private fun Canvas.drawLine(startPixel: Float) {
         val top = viewState.headerHeight + viewState.currentOrigin.y
-        val now = now()
+        val now = LocalDateTime.now()
 
         val portionOfDay = (now.hour - viewState.minHour) + now.minute / 60f
         val portionOfDayInPixels = portionOfDay * viewState.hourHeight

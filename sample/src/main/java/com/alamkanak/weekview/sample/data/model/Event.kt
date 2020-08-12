@@ -9,6 +9,9 @@ import android.text.style.StyleSpan
 import com.alamkanak.weekview.WeekViewDisplayable
 import com.alamkanak.weekview.WeekViewEvent
 import com.alamkanak.weekview.sample.R
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Calendar
 
 data class Event(
@@ -43,11 +46,15 @@ data class Event(
         return WeekViewEvent.Builder(this)
             .setId(id)
             .setTitle(styledTitle)
-            .setStartTime(startTime)
-            .setEndTime(endTime)
+            .setStartTime(startTime.toLocalDateTime())
+            .setEndTime(endTime.toLocalDateTime())
             .setLocation(location)
             .setAllDay(isAllDay)
             .setStyle(style)
             .build()
     }
+}
+
+private fun Calendar.toLocalDateTime(): LocalDateTime {
+    return Instant.ofEpochMilli(timeInMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
 }
