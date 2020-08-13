@@ -51,7 +51,7 @@ class BasicActivity : AppCompatActivity() {
         val adapter = BasicActivityWeekViewAdapter(loadMoreHandler = viewModel::fetchEvents)
         weekView.adapter = adapter
 
-        weekView.setDateFormatter { date: LocalDate ->
+        weekView.setDateFormatter { date ->
             val weekdayLabel = weekdayFormatter.format(date)
             val dateLabel = dateFormatter.format(date)
             weekdayLabel + "\n" + dateLabel

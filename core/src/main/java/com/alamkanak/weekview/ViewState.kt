@@ -612,7 +612,7 @@ internal data class ViewState(
 
         // If the user is scrolling, a new view becomes partially visible, so we must add an
         // additional date to the date range
-        val isNotScrolling = originX % totalDayWidth == 0f
+        val isNotScrolling = originX % totalDayWidth <= 0.001f
         val modifiedEnd = if (isNotScrolling) end - 1 else end
 
         dateRange.clear()
