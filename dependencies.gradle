@@ -2,7 +2,7 @@
 
 ext {
     buildConfig = [
-            minSdk      : 15,
+            minSdk      : 19,
             minSdkJsr310: 26,
             compileSdk  : 30,
             targetSdk   : 30,

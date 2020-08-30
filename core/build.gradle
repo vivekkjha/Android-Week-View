@@ -5,12 +5,15 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.shopify.testify'
 
 android {
     compileSdkVersion buildConfig.compileSdk
     defaultConfig {
         minSdkVersion buildConfig.minSdk
         targetSdkVersion buildConfig.targetSdk
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         // Required for core library desugaring
         multiDexEnabled true
@@ -41,4 +44,9 @@ dependencies {
     testImplementation testing.mockitoCore
     testImplementation testing.mockitoInline
     testImplementation testing.robolectric
+
+    androidTestImplementation 'androidx.test:core:1.3.0'
+    androidTestImplementation testing.androidxjUnit
+    androidTestImplementation testing.androidxTestRunner
+    androidTestImplementation 'androidx.test:rules:1.3.0'
 }

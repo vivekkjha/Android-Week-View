@@ -41,7 +41,7 @@ internal data class ViewState(
     val dateRangeWithStartPixels: MutableList<Pair<Calendar, Float>> = mutableListOf(),
 
     // Calendar configuration
-    var numberOfVisibleDays: Int = 0,
+    var numberOfVisibleDays: Int = 3,
     var restoreNumberOfVisibleDays: Boolean = true,
     var showFirstDayOfWeekFirst: Boolean = false,
     var showCurrentTimeFirst: Boolean = false,
@@ -63,7 +63,7 @@ internal data class ViewState(
     var timeColumnTextSize: Int = 0,
     var showMidnightHour: Boolean = false,
     var showTimeColumnHourSeparator: Boolean = false,
-    var timeColumnHoursInterval: Int = 0,
+    var timeColumnHoursInterval: Int = 1,
 
     // Time column separator
     var showTimeColumnSeparator: Boolean = false,
@@ -111,9 +111,9 @@ internal data class ViewState(
     var futureWeekendBackgroundColor: Int = 0,
 
     // Hour height
-    var hourHeight: Float = 0f,
+    var hourHeight: Float = 50f,
     var minHourHeight: Int = 0,
-    var maxHourHeight: Int = 0,
+    var maxHourHeight: Int = 400,
     var effectiveMinHourHeight: Int = 0,
     var showCompleteDay: Boolean = false,
 
@@ -138,19 +138,20 @@ internal data class ViewState(
     var daySeparatorStrokeWidth: Int = 0,
 
     // Scrolling
+    var horizontalScrollingEnabled: Boolean = false,
+
     @Deprecated("No longer used")
     var xScrollingSpeed: Float = 0f,
     @Deprecated("No longer used")
     var verticalFlingEnabled: Boolean = false,
     @Deprecated("No longer used")
     var horizontalFlingEnabled: Boolean = false,
-    var horizontalScrollingEnabled: Boolean = false,
     @Deprecated("No longer used")
     var scrollDuration: Int = 0,
 
     // Time range
     var minHour: Int = 0,
-    var maxHour: Int = 0,
+    var maxHour: Int = 24,
 
     // Font
     var typeface: Typeface = Typeface.DEFAULT

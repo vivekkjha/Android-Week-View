@@ -10,11 +10,12 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.1'
+        classpath "com.android.tools.build:gradle:4.0.1"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.2.1'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.28.0'
+        classpath "com.github.dcendents:android-maven-gradle-plugin:2.1"
+        classpath "org.jlleitschuh.gradle:ktlint-gradle:9.2.1"
+        classpath "com.github.ben-manes:gradle-versions-plugin:0.28.0"
+        classpath "com.shopify.testify:plugin:1.0.0-beta5"
     }
 }
 
